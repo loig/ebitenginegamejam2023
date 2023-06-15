@@ -9,7 +9,11 @@ import (
 func main() {
 
 	ebiten.SetWindowTitle("Petits fantômes")
-	if err := ebiten.RunGame(&Game{}); err != nil {
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+
+	g := MakeGame()
+
+	if err := ebiten.RunGame(&g); err != nil {
 		log.Fatal(err)
 	}
 
