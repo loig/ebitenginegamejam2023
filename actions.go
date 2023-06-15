@@ -7,6 +7,7 @@ import (
 const (
 	ActionMoveRight int = iota
 	ActionMoveLeft
+	ActionJump
 )
 
 func GetActionsFromKeyboard() (actions []int) {
@@ -17,6 +18,10 @@ func GetActionsFromKeyboard() (actions []int) {
 
 	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		actions = append(actions, ActionMoveRight)
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyUp) {
+		actions = append(actions, ActionJump)
 	}
 
 	return

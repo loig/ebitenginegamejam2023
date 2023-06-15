@@ -8,4 +8,6 @@ const (
 
 	gPlayerWidth  = 10
 	gPlayerHeight = 15
+
+	gGravity = 1.0
 )
