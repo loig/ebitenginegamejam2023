@@ -8,12 +8,13 @@ import (
 )
 
 type Character struct {
-	Width  int
-	Height int
-	PosX   float64
-	PosY   float64
-	SpeedX float64
-	SpeedY float64
+	Width   int
+	Height  int
+	PosX    float64
+	PosY    float64
+	SpeedX  float64
+	SpeedY  float64
+	Jumping bool
 }
 
 func InitPlayer() (c Character) {
@@ -28,31 +29,49 @@ func (c Character) Draw(screen *ebiten.Image) {
 	vector.DrawFilledRect(screen, float32(c.PosX), float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), color.RGBA{R: 255, B: 255, G: 255, A: 255}, false)
 }
 
-func (c *Character) Update(actions []int) {
+func (c *Character) Update(actions [ActionNumber]bool) {
 	askMove := false
 	onFloor := c.CheckFloorAndAdjust()
 	canJump := onFloor
+	improvingJump := false
 
-	for _, a := range actions {
-		switch a {
-		case ActionMoveLeft:
+	if actions[ActionJump] {
+		if canJump {
+			c.SpeedY = -10
+			c.Jumping = true
+		}
+	}
+
+	if actions[ActionImproveJump] {
+		improvingJump = c.Jumping && c.SpeedY >= -20
+	}
+
+	if actions[ActionMoveLeft] {
+		if onFloor {
 			c.SpeedX = -10
 			askMove = true
-		case ActionMoveRight:
+		}
+	}
+
+	if actions[ActionMoveRight] {
+		if onFloor {
 			c.SpeedX = 10
 			askMove = true
-		case ActionJump:
-			if canJump {
-				c.SpeedY = -10
-			}
 		}
+	}
+
+	if improvingJump {
+		c.SpeedY += -1
+	} else {
+		c.Jumping = false
 	}
 
 	if c.SpeedY >= 0 && onFloor {
 		c.SpeedY = 0
+		c.Jumping = false
 	}
 
-	if !onFloor {
+	if !onFloor && !c.Jumping {
 		c.SpeedY += gGravity
 	}
 
@@ -65,7 +84,7 @@ func (c *Character) Update(actions []int) {
 }
 
 func (c *Character) CheckFloorAndAdjust() (onFloor bool) {
-	onFloor = c.PosY > float64(gScreenHeight*gUnit)
+	onFloor = c.PosY >= float64(gScreenHeight*gUnit)
 
 	if onFloor {
 		c.PosY = float64(gScreenHeight * gUnit)
