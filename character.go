@@ -8,13 +8,20 @@ import (
 )
 
 type Character struct {
-	Width   int
-	Height  int
-	PosX    float64
-	PosY    float64
-	SpeedX  float64
-	SpeedY  float64
-	Jumping bool
+	Width       int
+	Height      int
+	PosX        float64
+	PosY        float64
+	SpeedX      float64
+	SpeedY      float64
+	OnFloor     bool
+	Jumping     bool
+	MovingLeft  bool
+	MovingRight bool
+	MaxSpeedX   float64
+	MaxSpeedY   float64
+	IncrSpeedX  float64
+	IncrSpeedY  float64
 }
 
 func InitPlayer() (c Character) {
@@ -22,6 +29,10 @@ func InitPlayer() (c Character) {
 	c.Height = gPlayerHeight * gUnit
 	c.PosX = float64(gScreenWidth*gUnit)/2 - float64(c.Width)/2
 	c.PosY = 0
+	c.MaxSpeedX = 15
+	c.IncrSpeedX = 2
+	c.MaxSpeedY = 20
+	c.IncrSpeedY = 4
 	return
 }
 
@@ -30,57 +41,88 @@ func (c Character) Draw(screen *ebiten.Image) {
 }
 
 func (c *Character) Update(actions [ActionNumber]bool) {
-	askMove := false
-	onFloor := c.CheckFloorAndAdjust()
-	canJump := onFloor
-	improvingJump := false
 
-	if actions[ActionJump] {
-		if canJump {
-			c.SpeedY = -10
-			c.Jumping = true
-		}
-	}
+	c.OnFloor = c.CheckFloorAndAdjust()
 
-	if actions[ActionImproveJump] {
-		improvingJump = c.Jumping && c.SpeedY >= -20
-	}
+	c.UpdateLeftRightSpeed(actions[ActionMoveLeft], actions[ActionMoveRight])
 
-	if actions[ActionMoveLeft] {
-		if onFloor {
-			c.SpeedX = -10
-			askMove = true
-		}
-	}
-
-	if actions[ActionMoveRight] {
-		if onFloor {
-			c.SpeedX = 10
-			askMove = true
-		}
-	}
-
-	if improvingJump {
-		c.SpeedY += -1
-	} else {
-		c.Jumping = false
-	}
-
-	if c.SpeedY >= 0 && onFloor {
-		c.SpeedY = 0
-		c.Jumping = false
-	}
-
-	if !onFloor && !c.Jumping {
-		c.SpeedY += gGravity
-	}
-
-	if !askMove && onFloor {
-		c.SpeedX = 0
-	}
+	c.UpadteUpDownSpeed(actions[ActionJump], actions[ActionImproveJump])
 
 	c.PosX += c.SpeedX
 	c.PosY += c.SpeedY
+}
+
+func (c *Character) UpadteUpDownSpeed(askJump, askImproveJump bool) {
+
+	if c.OnFloor {
+		c.Jumping = false
+		c.SpeedY = 0
+	}
+
+	if askJump && c.OnFloor {
+		c.SpeedY -= c.IncrSpeedY
+		c.Jumping = true
+		return
+	}
+
+	if askImproveJump && c.Jumping && c.SpeedY >= -c.MaxSpeedY {
+		c.SpeedY -= c.IncrSpeedY
+		return
+	}
+
+	c.Jumping = false
+
+	if !c.OnFloor {
+		c.SpeedY += gGravity
+	}
+}
+
+func (c *Character) UpdateLeftRightSpeed(askLeft, askRight bool) {
+	if c.SpeedX >= c.MaxSpeedX && askRight {
+		c.SpeedX = c.MaxSpeedX
+		return
+	}
+
+	if c.SpeedX <= -c.MaxSpeedX && askLeft {
+		c.SpeedX = -c.MaxSpeedX
+		return
+	}
+
+	if askLeft && askRight {
+		return
+	}
+
+	if askRight {
+		c.SpeedX += c.IncrSpeedX
+		if c.SpeedX > c.MaxSpeedX {
+			c.SpeedX = c.MaxSpeedX
+		}
+		return
+	}
+
+	if askLeft {
+		c.SpeedX -= c.IncrSpeedX
+		if c.SpeedX < -c.MaxSpeedX {
+			c.SpeedX = -c.MaxSpeedX
+		}
+		return
+	}
+
+	if c.SpeedX > 0 && c.OnFloor {
+		c.SpeedX -= c.IncrSpeedX
+		if c.SpeedX < 0 {
+			c.SpeedX = 0
+		}
+		return
+	}
+
+	if c.SpeedX < 0 && c.OnFloor {
+		c.SpeedX += c.IncrSpeedX
+		if c.SpeedX > 0 {
+			c.SpeedX = 0
+		}
+		return
+	}
 }
 
 func (c *Character) CheckFloorAndAdjust() (onFloor bool) {
