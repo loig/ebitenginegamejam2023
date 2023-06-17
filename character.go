@@ -8,58 +8,114 @@ import (
 )
 
 type Character struct {
-	Width       int
-	Height      int
-	PosX        float64
-	PosY        float64
-	SpeedX      float64
-	SpeedY      float64
-	OnFloor     bool
-	Jumping     bool
-	MovingLeft  bool
-	MovingRight bool
-	MaxSpeedX   float64
-	MaxSpeedY   float64
-	IncrSpeedX  float64
-	IncrSpeedY  float64
+	Width          int
+	Height         int
+	PosY           float64
+	SpeedY         float64
+	MaxSpeedY      float64
+	IncrSpeedY     float64
+	OnFloor        bool
+	Jumping        bool
+	Sliding        bool
+	SlideDuration  int
+	SlideFrame     int
+	SlidingWidth   int
+	SlidingHeight  int
+	StandingWidth  int
+	StandingHeight int
+	Kicking        bool
+	Color          color.Color
 }
 
 func InitPlayer() (c Character) {
-	c.Width = gPlayerWidth * gUnit
-	c.Height = gPlayerHeight * gUnit
-	c.PosX = float64(gScreenWidth*gUnit)/2 - float64(c.Width)/2
+	c.StandingWidth = gPlayerWidth
+	c.StandingHeight = gPlayerHeight
+	c.SlidingWidth = gPlayerSlidingWidth
+	c.SlidingHeight = gPlayerSlidingHeight
+	c.Width = c.StandingWidth
+	c.Height = c.StandingHeight
 	c.PosY = 0
-	c.MaxSpeedX = 15
-	c.IncrSpeedX = 2
-	c.MaxSpeedY = 20
-	c.IncrSpeedY = 4
+	c.IncrSpeedY = gPlayerIncrSpeedY
+	c.MaxSpeedY = gPlayerMaxSpeedY
+	c.SlideDuration = gPlayerSlideDuration
 	return
 }
 
 func (c Character) Draw(screen *ebiten.Image) {
-	vector.DrawFilledRect(screen, float32(c.PosX), float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), color.RGBA{R: 255, B: 255, G: 255, A: 255}, false)
+	vector.DrawFilledRect(screen, float32(gScreenWidth-c.Width)/2, float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), c.Color, false)
 }
 
 func (c *Character) Update(actions [ActionNumber]bool) {
 
-	c.OnFloor = c.CheckFloorAndAdjust()
+	c.CheckFloorAndAdjust()
+	c.HandleJump(actions[ActionJump], actions[ActionImproveJump])
+	c.HandleSlide(actions[ActionSlide])
+	c.HandleKick(actions[ActionKick])
+	c.SetImage()
 
-	c.UpdateLeftRightSpeed(actions[ActionMoveLeft], actions[ActionMoveRight])
-
-	c.UpadteUpDownSpeed(actions[ActionJump], actions[ActionImproveJump])
-
-	c.PosX += c.SpeedX
-	c.PosY += c.SpeedY
 }
 
-func (c *Character) UpadteUpDownSpeed(askJump, askImproveJump bool) {
+func (c *Character) HandleKick(askKick bool) {
+
+	c.Kicking = c.Sliding || (!c.OnFloor && askKick)
+
+}
+
+func (c *Character) HandleSlide(askSlide bool) {
+
+	if askSlide && c.OnFloor && !c.Sliding {
+		c.Sliding = true
+		c.SlideFrame = 0
+		return
+	}
+
+	if c.Sliding {
+		c.SlideFrame++
+		if c.SlideFrame >= c.SlideDuration {
+			c.Sliding = false
+		}
+	}
+
+}
+
+func (c *Character) SetImage() {
+	var red uint8 = 0
+	var green uint8 = 0
+	var blue uint8 = 0
+
+	if c.OnFloor {
+		red = 150
+	}
+
+	if c.Jumping {
+		green = 150
+	}
+
+	if c.Sliding {
+		blue = 150
+	}
+
+	if c.Kicking || c.Sliding {
+		c.Width = c.SlidingWidth
+		c.Height = c.SlidingHeight
+	} else {
+		c.Width = c.StandingWidth
+		c.Height = c.StandingHeight
+	}
+
+	c.Color = color.RGBA{R: red, G: green, B: blue, A: 150}
+}
+
+func (c *Character) HandleJump(askJump, askImproveJump bool) {
+
+	defer func() { c.PosY += c.SpeedY }()
 
 	if c.OnFloor {
 		c.Jumping = false
 		c.SpeedY = 0
 	}
 
-	if askJump && c.OnFloor {
+	if askJump && c.OnFloor && !c.Sliding {
 		c.SpeedY -= c.IncrSpeedY
 		c.Jumping = true
 		return
@@ -77,60 +133,10 @@ func (c *Character) UpadteUpDownSpeed(askJump, askImproveJump bool) {
 	}
 }
 
-func (c *Character) UpdateLeftRightSpeed(askLeft, askRight bool) {
-	if c.SpeedX >= c.MaxSpeedX && askRight {
-		c.SpeedX = c.MaxSpeedX
-		return
+func (c *Character) CheckFloorAndAdjust() {
+	c.OnFloor = c.PosY >= float64(gScreenHeight)
+
+	if c.OnFloor {
+		c.PosY = float64(gScreenHeight)
 	}
-
-	if c.SpeedX <= -c.MaxSpeedX && askLeft {
-		c.SpeedX = -c.MaxSpeedX
-		return
-	}
-
-	if askLeft && askRight {
-		return
-	}
-
-	if askRight {
-		c.SpeedX += c.IncrSpeedX
-		if c.SpeedX > c.MaxSpeedX {
-			c.SpeedX = c.MaxSpeedX
-		}
-		return
-	}
-
-	if askLeft {
-		c.SpeedX -= c.IncrSpeedX
-		if c.SpeedX < -c.MaxSpeedX {
-			c.SpeedX = -c.MaxSpeedX
-		}
-		return
-	}
-
-	if c.SpeedX > 0 && c.OnFloor {
-		c.SpeedX -= c.IncrSpeedX
-		if c.SpeedX < 0 {
-			c.SpeedX = 0
-		}
-		return
-	}
-
-	if c.SpeedX < 0 && c.OnFloor {
-		c.SpeedX += c.IncrSpeedX
-		if c.SpeedX > 0 {
-			c.SpeedX = 0
-		}
-		return
-	}
-}
-
-func (c *Character) CheckFloorAndAdjust() (onFloor bool) {
-	onFloor = c.PosY >= float64(gScreenHeight*gUnit)
-
-	if onFloor {
-		c.PosY = float64(gScreenHeight * gUnit)
-	}
-
-	return onFloor
 }

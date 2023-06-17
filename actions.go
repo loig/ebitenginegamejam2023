@@ -6,30 +6,19 @@ import (
 )
 
 const (
-	ActionMoveRight int = iota
-	ActionMoveLeft
-	ActionJump
+	ActionJump int = iota
 	ActionImproveJump
+	ActionSlide
+	ActionKick
 	ActionNumber
 )
 
 func GetActionsFromKeyboard() (actions [ActionNumber]bool) {
 
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		actions[ActionMoveLeft] = true
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		actions[ActionMoveRight] = true
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		actions[ActionImproveJump] = true
-	}
-
-	if inpututil.IsKeyJustPressed(ebiten.KeyUp) {
-		actions[ActionJump] = true
-	}
+	actions[ActionImproveJump] = ebiten.IsKeyPressed(ebiten.KeyUp)
+	actions[ActionJump] = inpututil.IsKeyJustPressed(ebiten.KeyUp)
+	actions[ActionSlide] = inpututil.IsKeyJustPressed(ebiten.KeyDown)
+	actions[ActionKick] = ebiten.IsKeyPressed(ebiten.KeyLeft)
 
 	return
 }
