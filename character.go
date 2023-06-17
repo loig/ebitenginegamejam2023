@@ -25,24 +25,114 @@ type Character struct {
 	StandingHeight int
 	Kicking        bool
 	Color          color.Color
+	OffScreen      *ebiten.Image
+}
+
+func InitCharacter() (c Character) {
+	c.PosY = 0
+	c.OffScreen = ebiten.NewImage(gScreenWidth, gScreenHeight)
+	return
 }
 
 func InitPlayer() (c Character) {
+	c = InitCharacter()
 	c.StandingWidth = gPlayerWidth
 	c.StandingHeight = gPlayerHeight
 	c.SlidingWidth = gPlayerSlidingWidth
 	c.SlidingHeight = gPlayerSlidingHeight
 	c.Width = c.StandingWidth
 	c.Height = c.StandingHeight
-	c.PosY = 0
 	c.IncrSpeedY = gPlayerIncrSpeedY
 	c.MaxSpeedY = gPlayerMaxSpeedY
 	c.SlideDuration = gPlayerSlideDuration
 	return
 }
 
-func (c Character) Draw(screen *ebiten.Image) {
-	vector.DrawFilledRect(screen, float32(gScreenWidth-c.Width)/2, float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), c.Color, false)
+func InitBigGhost() (c Character) {
+	c = InitCharacter()
+	c.StandingWidth = gBigGhostWidth
+	c.StandingHeight = gBigGhostHeight
+	c.SlidingWidth = gBigGhostSlidingWidth
+	c.SlidingHeight = gBigGhostSlidingHeight
+	c.Width = c.StandingWidth
+	c.Height = c.StandingHeight
+	c.IncrSpeedY = gBigGhostIncrSpeedY
+	c.MaxSpeedY = gBigGhostMaxSpeedY
+	c.SlideDuration = gBigGhostSlideDuration
+	return
+}
+
+func InitSmallGhost() (c Character) {
+	c = InitCharacter()
+	c.StandingWidth = gSmallGhostWidth
+	c.StandingHeight = gSmallGhostHeight
+	c.SlidingWidth = gSmallGhostSlidingWidth
+	c.SlidingHeight = gSmallGhostSlidingHeight
+	c.Width = c.StandingWidth
+	c.Height = c.StandingHeight
+	c.IncrSpeedY = gSmallGhostIncrSpeedY
+	c.MaxSpeedY = gSmallGhostMaxSpeedY
+	c.SlideDuration = gSmallGhostSlideDuration
+	return
+}
+
+func InitTallGhost() (c Character) {
+	c = InitCharacter()
+	c.StandingWidth = gTallGhostWidth
+	c.StandingHeight = gTallGhostHeight
+	c.SlidingWidth = gTallGhostSlidingWidth
+	c.SlidingHeight = gTallGhostSlidingHeight
+	c.Width = c.StandingWidth
+	c.Height = c.StandingHeight
+	c.IncrSpeedY = gTallGhostIncrSpeedY
+	c.MaxSpeedY = gTallGhostMaxSpeedY
+	c.SlideDuration = gTallGhostSlideDuration
+	return
+}
+
+func (c Character) Draw(screen *ebiten.Image, position int) {
+
+	c.OffScreen.Clear()
+	vector.DrawFilledRect(c.OffScreen, float32(gScreenWidth-c.Width)/2, float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), c.Color, false)
+	vector.DrawFilledRect(c.OffScreen, 0, 0, 20, 30, c.Color, false)
+
+	options := ebiten.DrawImageOptions{}
+
+	tx := 0.0
+	ty := 0.0
+	scalex := 1.0
+	scaley := 1.0
+	switch position {
+	case DrawPositionBottom:
+		tx = float64(gScreenWidth) / 4
+		ty = float64(gScreenHeight) / 2
+		scalex = 0.5
+		scaley = -0.5
+	case DrawPositionTop:
+		tx = float64(gScreenWidth) / 4
+		scalex = 0.5
+		scaley = 0.5
+	case DrawPositionTopLeft:
+		scalex = 0.5
+		scaley = 0.5
+	case DrawPositionBottomLeft:
+		ty = float64(gScreenHeight)
+		scalex = 0.5
+		scaley = -0.5
+	case DrawPositionTopRight:
+		tx = float64(gScreenWidth)
+		scalex = -0.5
+		scaley = 0.5
+	case DrawPositionBottomRight:
+		ty = float64(gScreenHeight)
+		tx = float64(gScreenWidth)
+		scalex = -0.5
+		scaley = -0.5
+	}
+	options.GeoM.Scale(scalex, scaley)
+	options.GeoM.Translate(tx, ty)
+
+	screen.DrawImage(c.OffScreen, &options)
 }
 
 func (c *Character) Update(actions [ActionNumber]bool) {

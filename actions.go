@@ -5,14 +5,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-const (
-	ActionJump int = iota
-	ActionImproveJump
-	ActionSlide
-	ActionKick
-	ActionNumber
-)
-
 func GetActionsFromKeyboard() (actions [ActionNumber]bool) {
 
 	actions[ActionImproveJump] = ebiten.IsKeyPressed(ebiten.KeyUp)
