@@ -17,6 +17,8 @@ type Character struct {
 	OnFloor        bool
 	Jumping        bool
 	Sliding        bool
+	WantSlide      bool
+	SpeedYMult     float64
 	SlideDuration  int
 	SlideFrame     int
 	SlidingWidth   int
@@ -45,6 +47,7 @@ func InitPlayer() (c Character) {
 	c.IncrSpeedY = gPlayerIncrSpeedY
 	c.MaxSpeedY = gPlayerMaxSpeedY
 	c.SlideDuration = gPlayerSlideDuration
+	c.SpeedYMult = gPlayesSpeedYMult
 	return
 }
 
@@ -59,6 +62,7 @@ func InitBigGhost() (c Character) {
 	c.IncrSpeedY = gBigGhostIncrSpeedY
 	c.MaxSpeedY = gBigGhostMaxSpeedY
 	c.SlideDuration = gBigGhostSlideDuration
+	c.SpeedYMult = gBigGhostSpeedYMult
 	return
 }
 
@@ -73,6 +77,7 @@ func InitSmallGhost() (c Character) {
 	c.IncrSpeedY = gSmallGhostIncrSpeedY
 	c.MaxSpeedY = gSmallGhostMaxSpeedY
 	c.SlideDuration = gSmallGhostSlideDuration
+	c.SpeedYMult = gSmallGhostSpeedYMult
 	return
 }
 
@@ -87,6 +92,7 @@ func InitTallGhost() (c Character) {
 	c.IncrSpeedY = gTallGhostIncrSpeedY
 	c.MaxSpeedY = gTallGhostMaxSpeedY
 	c.SlideDuration = gTallGhostSlideDuration
+	c.SpeedYMult = gTallGhostSpeedYMult
 	return
 }
 
@@ -139,7 +145,7 @@ func (c *Character) Update(actions [ActionNumber]bool) {
 
 	c.CheckFloorAndAdjust()
 	c.HandleJump(actions[ActionJump], actions[ActionImproveJump])
-	c.HandleSlide(actions[ActionSlide])
+	c.HandleSlide(actions[ActionSlide] || (c.OnFloor && actions[ActionKick]))
 	c.HandleKick(actions[ActionKick])
 	c.SetImage()
 
@@ -153,9 +159,22 @@ func (c *Character) HandleKick(askKick bool) {
 
 func (c *Character) HandleSlide(askSlide bool) {
 
-	if askSlide && c.OnFloor && !c.Sliding {
+	if (askSlide || c.WantSlide) && c.OnFloor && !c.Sliding {
 		c.Sliding = true
 		c.SlideFrame = 0
+		c.WantSlide = false
+		c.SpeedY = 0
+		return
+	}
+
+	if c.WantSlide {
+		c.SpeedY += c.SpeedYMult * c.IncrSpeedY
+		return
+	}
+
+	if askSlide && !c.OnFloor {
+		c.WantSlide = true
+		c.Jumping = false
 		return
 	}
 
@@ -205,9 +224,10 @@ func (c *Character) HandleJump(askJump, askImproveJump bool) {
 		c.SpeedY = 0
 	}
 
-	if askJump && c.OnFloor && !c.Sliding {
+	if askJump && c.OnFloor {
 		c.SpeedY -= c.IncrSpeedY
 		c.Jumping = true
+		c.Sliding = false
 		return
 	}
 

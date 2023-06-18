@@ -13,6 +13,7 @@ const (
 	gPlayerSlidingWidth  = gUnit * 15
 	gPlayerSlidingHeight = gUnit * 10
 	gPlayerSlideDuration = 40
+	gPlayesSpeedYMult    = 2
 
 	gBigGhostWidth         = gUnit * 20
 	gBigGhostHeight        = gUnit * 30
@@ -21,6 +22,7 @@ const (
 	gBigGhostSlidingWidth  = gUnit * 30
 	gBigGhostSlidingHeight = gUnit * 20
 	gBigGhostSlideDuration = 40
+	gBigGhostSpeedYMult    = 1
 
 	gSmallGhostWidth         = gUnit * 5
 	gSmallGhostHeight        = gUnit * 5
@@ -29,6 +31,7 @@ const (
 	gSmallGhostSlidingWidth  = gUnit * 5
 	gSmallGhostSlidingHeight = gUnit * 5
 	gSmallGhostSlideDuration = 20
+	gSmallGhostSpeedYMult    = 3
 
 	gTallGhostWidth         = gUnit * 5
 	gTallGhostHeight        = gUnit * 25
@@ -37,6 +40,7 @@ const (
 	gTallGhostSlidingWidth  = gUnit * 25
 	gTallGhostSlidingHeight = gUnit * 5
 	gTallGhostSlideDuration = 60
+	gTallGhostSpeedYMult    = 2
 
 	gGravity = 1.0
 )
