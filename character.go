@@ -99,8 +99,7 @@ func InitTallGhost() (c Character) {
 func (c Character) Draw(screen *ebiten.Image, position int) {
 
 	c.OffScreen.Clear()
-	vector.DrawFilledRect(c.OffScreen, float32(gScreenWidth-c.Width)/2, float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), c.Color, false)
-	vector.DrawFilledRect(c.OffScreen, 0, 0, 20, 30, c.Color, false)
+	vector.DrawFilledRect(c.OffScreen, float32(gCharacterXPos)-float32(c.Width)/2, float32(c.PosY-float64(c.Height)), float32(c.Width), float32(c.Height), c.Color, false)
 
 	options := ebiten.DrawImageOptions{}
 

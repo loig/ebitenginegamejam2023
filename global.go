@@ -43,4 +43,6 @@ const (
 	gTallGhostSpeedYMult    = 2
 
 	gGravity = 1.0
+
+	gCharacterXPos = gScreenWidth / 2
 )
